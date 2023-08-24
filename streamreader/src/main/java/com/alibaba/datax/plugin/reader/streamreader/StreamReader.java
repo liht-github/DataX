@@ -217,9 +217,11 @@ public class StreamReader extends Reader {
 		@Override
 		public void prepare() {
 		}
-
+        // 具体的业务实现，就在Reader（即:E）、Transformer（即：T）、Writer（即：L）里面实现
 		@Override
+		// 开始读操作，读完以后使用recordSender 发送给writer
 		public void startRead(RecordSender recordSender) {
+
 			Record oneRecord = buildOneRecord(recordSender, this.columns);
 			while (this.sliceRecordCount > 0) {
                 if (this.haveMixupFunction) {

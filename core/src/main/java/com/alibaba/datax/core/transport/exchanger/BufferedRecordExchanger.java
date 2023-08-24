@@ -12,13 +12,15 @@ import com.alibaba.datax.core.transport.record.TerminateRecord;
 import com.alibaba.datax.core.util.FrameworkErrorCode;
 import com.alibaba.datax.core.util.container.CoreConstant;
 import org.apache.commons.lang.Validate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
-
+	private static final Logger LOG = LoggerFactory.getLogger(BufferedRecordExchanger.class);
 	private final Channel channel;
 
 	private final Configuration configuration;
@@ -127,13 +129,17 @@ public class BufferedRecordExchanger implements RecordSender, RecordReceiver {
 		}
 		boolean isEmpty = (this.bufferIndex >= this.buffer.size());
 		if (isEmpty) {
+			// 接收了什么？
 			receive();
 		}
 
 		Record record = this.buffer.get(this.bufferIndex++);
 		if (record instanceof TerminateRecord) {
 			record = null;
+		}else{
+			LOG.debug("get 第 "+record.getColumn(0).getRawData()+" 条数据");
 		}
+
 		return record;
 	}
 

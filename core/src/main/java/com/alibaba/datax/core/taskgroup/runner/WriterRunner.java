@@ -65,6 +65,7 @@ public class WriterRunner extends AbstractRunner implements Runnable {
             taskWriter.post();
             postPerfRecord.end();
 
+            // 标记任务成功
             super.markSuccess();
         } catch (Throwable e) {
             LOG.error("Writer Runner Received Exceptions:", e);

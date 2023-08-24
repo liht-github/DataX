@@ -97,6 +97,7 @@ public class JobContainer extends AbstractContainer {
         LOG.info("DataX jobContainer starts job.");
 
         boolean hasException = false;
+        // 检查配置是否正常
         boolean isDryRun = false;
         try {
             this.startTimeStamp = System.currentTimeMillis();
@@ -107,23 +108,29 @@ public class JobContainer extends AbstractContainer {
             } else {
                 userConf = configuration.clone();
                 LOG.debug("jobContainer starts to do preHandle ...");
+                // 预处理
                 this.preHandle();
 
                 LOG.debug("jobContainer starts to do init ...");
+                // 初始化reader和writer,并触发reader和writer里init方法
                 this.init();
                 LOG.info("jobContainer starts to do prepare ...");
+                // 执行前触发reader和writer里的prepare方法
                 this.prepare();
                 LOG.info("jobContainer starts to do split ...");
+                // 根据配置分割任务，计算需要分多少个任务和任务组
                 this.totalStage = this.split();
                 LOG.info("jobContainer starts to do schedule ...");
+                // 开始调度，这里会进入TaskGoupContainer
                 this.schedule();
                 LOG.debug("jobContainer starts to do post ...");
+                // 触发reader和Writer里面的post方法
                 this.post();
 
                 LOG.debug("jobContainer starts to do postHandle ...");
                 this.postHandle();
                 LOG.info("DataX jobId [{}] completed successfully.", this.jobId);
-
+                // 触发钩子，监控整个容器的运行情况
                 this.invokeHooks();
             }
         } catch (Throwable e) {
@@ -382,6 +389,13 @@ public class JobContainer extends AbstractContainer {
      * 执行reader和writer最细粒度的切分，需要注意的是，writer的切分结果要参照reader的切分结果，
      * 达到切分后数目相等，才能满足1：1的通道模型，所以这里可以将reader和writer的配置整合到一起，
      * 然后，为避免顺序给读写端带来长尾影响，将整合的结果shuffler掉
+     * <p>
+     * 1.切分任务
+     * 2.channel数目的确定
+     * 3.reader的切分
+     * 4.Writer的切分
+     * 5.合并配置切分
+     * 6.配任务
      */
     private int split() {
         this.adjustChannelNumber();
@@ -513,7 +527,7 @@ public class JobContainer extends AbstractContainer {
         ExecuteMode executeMode = null;
         AbstractScheduler scheduler;
         try {
-        	executeMode = ExecuteMode.STANDALONE;
+            executeMode = ExecuteMode.STANDALONE;
             scheduler = initStandaloneScheduler(this.configuration);
 
             //设置 executeMode
@@ -726,9 +740,15 @@ public class JobContainer extends AbstractContainer {
     }
 
     // TODO: 如果源头就是空数据
+
+    /**
+     * adviceNumber, 建议的数目
+     */
     private List<Configuration> doReaderSplit(int adviceNumber) {
+        // 切换ClassLoader
         classLoaderSwapper.setCurrentThreadClassLoader(LoadUtil.getJarLoader(
                 PluginType.READER, this.readerPluginName));
+        // 调用Job.Reader的split切分
         List<Configuration> readerSlicesConfigs =
                 this.jobReader.split(adviceNumber);
         if (readerSlicesConfigs == null || readerSlicesConfigs.size() <= 0) {
@@ -762,6 +782,7 @@ public class JobContainer extends AbstractContainer {
 
     /**
      * 按顺序整合reader和writer的配置，这里的顺序不能乱！ 输入是reader、writer级别的配置，输出是一个完整task的配置
+     * 合并reader，writer，transformer配置列表。并将任务列表，保存在配置job.content的值里。
      *
      * @param readerTasksConfigs
      * @param writerTasksConfigs
@@ -777,6 +798,7 @@ public class JobContainer extends AbstractContainer {
             List<Configuration> readerTasksConfigs,
             List<Configuration> writerTasksConfigs,
             List<Configuration> transformerConfigs) {
+        // reader切分的任务数目必须等于writer切分的任务数目
         if (readerTasksConfigs.size() != writerTasksConfigs.size()) {
             throw DataXException.asDataXException(
                     FrameworkErrorCode.PLUGIN_SPLIT_ERROR,

@@ -10,6 +10,12 @@
     <artifactId>datax-core</artifactId>
     <name>datax-core</name>
     <packaging>jar</packaging>
+    <repositories>
+        <repository>
+            <id>cloudera</id>
+            <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <dependency>

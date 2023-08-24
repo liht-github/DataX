@@ -273,6 +273,8 @@ public class CommonRdbmsWriter {
             try {
                 Record record;
                 while ((record = recordReceiver.getFromReader()) != null) {
+                    LOG.trace("to write 第 "+record.getColumn(0).getRawData()+" 条数据");
+                    LOG.trace("get 第 "+record.getColumn(0).getRawData()+" 条数据");
                     if (record.getColumnNumber() != this.columnNumber) {
                         // 源头读取字段列数与目的表字段写入列数不相等，直接报错
                         throw DataXException

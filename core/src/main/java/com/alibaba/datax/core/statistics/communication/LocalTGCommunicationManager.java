@@ -44,6 +44,11 @@ public final class LocalTGCommunicationManager {
         return taskGroupCommunicationMap.get(taskGroupId);
     }
 
+    /**
+     * 根据tgId 将taskGroupCommunicationMap中没有的comm 插入
+     * @param taskGroupId
+     * @param communication
+     */
     public static void updateTaskGroupCommunication(final int taskGroupId,
                                                     final Communication communication) {
         Validate.isTrue(taskGroupCommunicationMap.containsKey(

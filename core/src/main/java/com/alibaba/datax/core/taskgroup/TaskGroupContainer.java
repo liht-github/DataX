@@ -137,7 +137,7 @@ public class TaskGroupContainer extends AbstractContainer {
             Map<Integer, Configuration> taskConfigMap = buildTaskConfigMap(taskConfigs); //taskId与task配置
             List<Configuration> taskQueue = buildRemainTasks(taskConfigs); //待运行task列表
             Map<Integer, TaskExecutor> taskFailedExecutorMap = new HashMap<Integer, TaskExecutor>(); //taskId与上次失败实例
-            List<TaskExecutor> runTasks = new ArrayList<TaskExecutor>(channelNumber); //正在运行task
+            List<TaskExecutor> runTasks = new ArrayList<TaskExecutor>(channelNumber); //正在运行task 根据计算的通道数，对任务进行TaskGroup 分组
             Map<Integer, Long> taskStartTimeMap = new HashMap<Integer, Long>(); //任务开始时间
 
             long lastReportTimeStamp = 0;
@@ -225,9 +225,11 @@ public class TaskGroupContainer extends AbstractContainer {
                         }
                     }
                     Configuration taskConfigForRun = taskMaxRetryTimes > 1 ? taskConfig.clone() : taskConfig;
+                    // 初始化任务处理器
                 	TaskExecutor taskExecutor = new TaskExecutor(taskConfigForRun, attemptCount);
                     taskStartTimeMap.put(taskId, System.currentTimeMillis());
-                	taskExecutor.doStart();
+                    // 启动任务Task
+                    taskExecutor.doStart();
 
                     iterator.remove();
                     runTasks.add(taskExecutor);
@@ -404,11 +406,11 @@ public class TaskGroupContainer extends AbstractContainer {
             /**
              * 获取transformer的参数
              */
-
+            // 根据配置构建不同的transformer,相当于ETL里的T
             List<TransformerExecution> transformerInfoExecs = TransformerUtil.buildTransformerInfo(taskConfig);
 
             /**
-             * 生成writerThread
+             * 生成writerThread 初始化写runnable
              */
             writerRunner = (WriterRunner) generateRunner(PluginType.WRITER);
             this.writerThread = new Thread(writerRunner,
@@ -420,7 +422,7 @@ public class TaskGroupContainer extends AbstractContainer {
                             CoreConstant.JOB_WRITER_NAME)));
 
             /**
-             * 生成readerThread
+             * 生成readerThread,初始化写runnable,这里注入了transformer
              */
             readerRunner = (ReaderRunner) generateRunner(PluginType.READER,transformerInfoExecs);
             this.readerThread = new Thread(readerRunner,
@@ -435,6 +437,7 @@ public class TaskGroupContainer extends AbstractContainer {
         }
 
         public void doStart() {
+            // 先启动写线程
             this.writerThread.start();
 
             // reader没有起来，writer不可能结束
@@ -443,7 +446,7 @@ public class TaskGroupContainer extends AbstractContainer {
                         FrameworkErrorCode.RUNTIME_ERROR,
                         this.taskCommunication.getThrowable());
             }
-
+            // 启动读线程，这里注意上一步已经初始化transformer了，这里启动transformer也做了相应的操作
             this.readerThread.start();
 
             // 这里reader可能很快结束

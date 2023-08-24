@@ -46,21 +46,24 @@ public class Engine {
          * 初始化PluginLoader，可以获取各种插件配置
          */
         LoadUtil.bind(allConf);
-
+        // 判断是否是job true:初始化JobContainer false:初始化TaskGroupContainer
         boolean isJob = !("taskGroup".equalsIgnoreCase(allConf
                 .getString(CoreConstant.DATAX_CORE_CONTAINER_MODEL)));
         //JobContainer会在schedule后再行进行设置和调整值
         int channelNumber =0;
+        // 抽象容器 分为JobContainer 和 TaskGroupContainer两种
         AbstractContainer container;
         long instanceId;
         int taskGroupId = -1;
         if (isJob) {
+            // 初始化JobContainer
             allConf.set(CoreConstant.DATAX_CORE_CONTAINER_JOB_MODE, RUNTIME_MODE);
             container = new JobContainer(allConf);
             instanceId = allConf.getLong(
                     CoreConstant.DATAX_CORE_CONTAINER_JOB_ID, 0);
 
         } else {
+            // 初始化TaskGroupContainer
             container = new TaskGroupContainer(allConf);
             instanceId = allConf.getLong(
                     CoreConstant.DATAX_CORE_CONTAINER_JOB_ID);
@@ -83,6 +86,7 @@ public class Engine {
         //初始化PerfTrace
         PerfTrace perfTrace = PerfTrace.getInstance(isJob, instanceId, taskGroupId, traceEnable);
         perfTrace.setJobInfo(jobInfoConfig,perfReportEnable,channelNumber);
+        // 启动容器
         container.start();
 
     }
@@ -127,7 +131,7 @@ public class Engine {
         // 如果用户没有明确指定jobid, 则 datax.py 会指定 jobid 默认值为-1
         String jobIdString = cl.getOptionValue("jobid");
         RUNTIME_MODE = cl.getOptionValue("mode");
-
+        // 封装配置
         Configuration configuration = ConfigParser.parse(jobPath);
         // 绑定i18n信息
         MessageSource.init(configuration);
@@ -162,7 +166,7 @@ public class Engine {
         LOG.info("\n" + Engine.filterJobConfiguration(configuration) + "\n");
 
         LOG.debug(configuration.toJSON());
-
+        // 检验配置
         ConfigurationValidate.doValidate(configuration);
         Engine engine = new Engine();
         engine.start(configuration);
@@ -198,6 +202,7 @@ public class Engine {
     public static void main(String[] args) throws Exception {
         int exitCode = 0;
         try {
+            // 程序入口
             Engine.entry(args);
         } catch (Throwable e) {
             exitCode = 1;

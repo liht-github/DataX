@@ -29,6 +29,7 @@ public class TransformerRegistry {
         /**
          * add native transformer
          * local storage and from server will be delay load.
+         * 官方默认注册了 5 个方法，分别是截取字符串、填补、替换、过滤、groovy 代码段（后面会详细介绍）
          */
 
         registTransformer(new SubstrTransformer());
@@ -37,14 +38,21 @@ public class TransformerRegistry {
         registTransformer(new FilterTransformer());
         registTransformer(new GroovyTransformer());
         registTransformer(new DigestTransformer());
+        //将自己写的transformer注册进来
+        registTransformer(new DateTransformer());
     }
 
     public static void loadTransformerFromLocalStorage() {
         //add local_storage transformer
+        //加载本地存储的 transformer
         loadTransformerFromLocalStorage(null);
     }
 
-
+    /**
+     * 从本地加载transform（主要是根据transform加载transformer.json）
+     *
+     * @param transformers List<String> transformer文件名列表
+     */
     public static void loadTransformerFromLocalStorage(List<String> transformers) {
 
         String[] paths = new File(CoreConstant.DATAX_STORAGE_TRANSFORMER_HOME).list();
@@ -64,6 +72,15 @@ public class TransformerRegistry {
         }
     }
 
+    /**
+     * 根据文件名加载transformer <br>
+     * 1 先根据 tf名字找到tf.json <br>
+     * 2 将json加载成cfg <br>
+     * 3 将tf 的jar加载 <br>
+     * 4 将tf注册到map中 <br>
+     *
+     * @param each String transformer的文件名
+     */
     public static void loadTransformer(String each) {
         String transformerPath = CoreConstant.DATAX_STORAGE_TRANSFORMER_HOME + File.separator + each;
         Configuration transformerConfiguration;
@@ -104,6 +121,12 @@ public class TransformerRegistry {
         }
     }
 
+    /**
+     * 根据 transform路径加载transformer.json
+     *
+     * @param transformerPath String
+     * @return Configuration
+     */
     private static Configuration loadTransFormerConfig(String transformerPath) {
         return Configuration.from(new File(transformerPath + File.separator + "transformer.json"));
     }
@@ -146,8 +169,16 @@ public class TransformerRegistry {
         registedTransformer.put(complexTransformer.getTransformerName(), buildTransformerInfo(complexTransformer, isNative, classLoader));
     }
 
+    /**
+     * 该方法存在一定问题， <br>
+     * 1 返回值为空，检查结果没处用 <br>
+     * 2 校验是否本地方法不太严谨 <br>
+     * @param functionName
+     * @param isNative
+     */
     private static void checkName(String functionName, boolean isNative) {
         boolean checkResult = true;
+        // 只有是datax本地的transform，name名称才dx_开头
         if (isNative) {
             if (!functionName.startsWith("dx_")) {
                 checkResult = false;

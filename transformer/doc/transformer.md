@@ -173,19 +173,22 @@ String code3 = "Column column = record.getColumn(1);\n" +
                 },
                 "transformer": [
                     {
-                        "name": "dx_substr",
+                        "name": "dx_substr", //通过唯一标识符指定datax内置的transformer
                         "parameter": 
                             {
-                            "columnIndex":5,
-                            "paras":["1","3"]
+                            "columnIndex":5, // col列的下标
+                            "paras":[
+                            "1",    //从 col的哪个下标开始截取
+                            "3"     //截取后该col 值的长度
+                            ]
                             }  
                     },
                     {
                         "name": "dx_replace",
                         "parameter": 
                             {
-                            "columnIndex":4,
-                            "paras":["3","4","****"]
+                            "columnIndex":4,  //对下标为4的字段进行处理
+                            "paras":["3","4","****"] // 将下标3到4的字符内容替换为 ****
                             }  
                     },
                     {
@@ -196,6 +199,33 @@ String code3 = "Column column = record.getColumn(1);\n" +
                             "paras":["md5", "toLowerCase"]
                             }  
                     },
+                    {
+                            "name": "dx_pad",
+                            "parameter":
+                            {
+                              "columnIndex":0,
+                              "paras":["l","9","-"]  // l在头部填充，9是最后数据的长度，-是要填充的内容
+                            }
+                    },
+                    {
+                         "name": "dx_groovy",
+                            "parameter": {
+                              "code": "Column column = record.getColumn(0);def str = column.asString();def sb = new StringBuffer(str);def header = sb.insert(0,'AA');def strHeader = header.toString();record.setColumn(1, new StringColumn(strHeader));return record",
+                              "extraPackage": [
+                                "import groovy.json.JsonSlurper;"
+                              ]
+                            }
+                     },
+                     //code 中的值是
+                     code中的值如下：
+                        Column column = record.getColumn(0); \\获取下标为0的col
+                        def str = column.asString(); \\ 获取col中的值
+                        def sb = new StringBuffer(str); \\转为stringBuffer
+                        def header = sb.insert(0,'AA'); \\在sb的头部插入字符AA
+                        def strHeader = header.toString(); \\sb转为string
+                        record.setColumn(0, new StringColumn(strHeader)); \\ 数据重新写入col
+                        return record" \\返回数据行
+
                     {
                         "name": "dx_groovy",
                           "parameter": 

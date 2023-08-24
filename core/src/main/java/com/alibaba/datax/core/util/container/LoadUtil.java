@@ -52,7 +52,7 @@ public class LoadUtil {
     private static Map<String, JarLoader> jarLoaderCenter = new HashMap<String, JarLoader>();
 
     /**
-     * 设置pluginConfigs，方便后面插件来获取
+     * 设置pluginConfigs，方便后面插件来获取 初始化PluginLoader，可以获取各种插件配置
      *
      * @param pluginConfigs
      */
@@ -60,11 +60,28 @@ public class LoadUtil {
         pluginRegisterCenter = pluginConfigs;
     }
 
+    /**
+     * 根据插件类型+插件名称，生成一个 字符串。插件中心根据该字符串找到对应插件
+     *
+     * @param pluginType PluginType
+     * @param pluginName String
+     * @return String
+     */
     private static String generatePluginKey(PluginType pluginType,
                                             String pluginName) {
         return String.format(pluginTypeNameFormat, pluginType.toString(),
                 pluginName);
     }
+
+    /**
+     * 根据插件类型和插件名称，获取配置； <br/>
+     * 1 根据 插件类型+插件名称，返回string ； <br/>
+     * 2 从 pluginRegisterCenter 中根据 string获取配置
+     *
+     * @param pluginType
+     * @param pluginName
+     * @return
+     */
 
     private static Configuration getPluginConf(PluginType pluginType,
                                                String pluginName) {
@@ -82,7 +99,7 @@ public class LoadUtil {
     }
 
     /**
-     * 加载JobPlugin，reader、writer都可能要加载
+     * 根据反射使用插件类型+插件名称 返回 插件。加载JobPlugin，reader、writer都可能要加载
      *
      * @param pluginType
      * @param pluginName
@@ -107,7 +124,7 @@ public class LoadUtil {
     }
 
     /**
-     * 加载taskPlugin，reader、writer都可能加载
+     * 原理类同上面loadJobPlugin 方法。加载taskPlugin，reader、writer都可能加载
      *
      * @param pluginType
      * @param pluginName

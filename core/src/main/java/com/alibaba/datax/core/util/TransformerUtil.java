@@ -19,6 +19,13 @@ public class TransformerUtil {
 
     private static final Logger LOG = LoggerFactory.getLogger(TransformerUtil.class);
 
+    /**
+     * 根据task的配置构建transformer
+     * 将conf转为可执行的TransformerExecution列表
+     *
+     * @param taskConfig Configuration
+     * @return List<TransformerExecution>
+     */
     public static List<TransformerExecution> buildTransformerInfo(Configuration taskConfig) {
         List<Configuration> tfConfigs = taskConfig.getListConfiguration(CoreConstant.JOB_TRANSFORMER);
         if (tfConfigs == null || tfConfigs.size() == 0) {

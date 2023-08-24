@@ -145,6 +145,7 @@ public class StreamWriter extends Writer {
         }
 
         @Override
+        // 从record receiver接收内容 写入目标端
         public void startWrite(RecordReceiver recordReceiver) {
 
 

@@ -18,9 +18,13 @@ import java.util.List;
 public abstract class AbstractScheduler {
     private static final Logger LOG = LoggerFactory
             .getLogger(AbstractScheduler.class);
-
+    /**
+     * 脏数据行数检查器，用于运行中随时检查脏数据是否超过限制（脏数据行数，或脏数据百分比）
+     */
     private ErrorRecordChecker errorLimit;
-
+    /**
+     * 积累容器通讯器，来处理JobContainer、TaskGroupContainer和Task的通讯
+     */
     private AbstractContainerCommunicator containerCommunicator;
 
     private Long jobId;
@@ -33,6 +37,14 @@ public abstract class AbstractScheduler {
         this.containerCommunicator = containerCommunicator;
     }
 
+    /**
+     * 默认调度执行方法 <br>
+     * 1 传入多个调度配置，获取报告时间+休息时间+jobId（赋值给全局jobId），生成错误记录检查类
+     * 2 给全局jobId赋值，生成错误记录检查类，生成容器通讯类（反馈任务信息）
+     * 3 根据入参计算task的数量，开始所有taskGroup
+     *
+     * @param configurations List<Configuration>
+     */
     public void schedule(List<Configuration> configurations) {
         Validate.notNull(configurations,
                 "scheduler配置不能为空");
@@ -111,6 +123,11 @@ public abstract class AbstractScheduler {
 
     }
 
+    /**
+     * 开始所有的taskGroup，只允许本包的类访问
+     *
+     * @param configurations List<Configuration>
+     */
     protected abstract void startAllTaskGroup(List<Configuration> configurations);
 
     protected abstract void dealFailedStat(AbstractContainerCommunicator frameworkCollector, Throwable throwable);

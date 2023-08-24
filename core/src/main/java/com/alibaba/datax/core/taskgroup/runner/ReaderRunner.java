@@ -28,6 +28,11 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
         super(abstractTaskPlugin);
     }
 
+    /**
+     * 具体执行的方法 <br>
+     * 1 reader.task每个会执行4个阶段，分别是  init()、prepare()、startRead(recordSender)、post(); <br>
+     * 2 reader.task的每个执行阶段，会收集该阶段的 信息保存到PerfRecord中，PerfRecord.start 方法会将信息汇总到PerfTrace <br/>
+     */
     @Override
     public void run() {
         assert null != this.recordSender;
@@ -39,18 +44,19 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
         try {
             channelWaitWrite.start();
 
+            // init
             LOG.debug("task reader starts to do init ...");
             PerfRecord initPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_INIT);
             initPerfRecord.start();
             taskReader.init();
             initPerfRecord.end();
-
+            // prepare()
             LOG.debug("task reader starts to do prepare ...");
             PerfRecord preparePerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_PREPARE);
             preparePerfRecord.start();
             taskReader.prepare();
             preparePerfRecord.end();
-
+            // startRead(recordSender)
             LOG.debug("task reader starts to read ...");
             PerfRecord dataPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_DATA);
             dataPerfRecord.start();
@@ -60,7 +66,7 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
             dataPerfRecord.addCount(CommunicationTool.getTotalReadRecords(super.getRunnerCommunication()));
             dataPerfRecord.addSize(CommunicationTool.getTotalReadBytes(super.getRunnerCommunication()));
             dataPerfRecord.end();
-
+            // post()
             LOG.debug("task reader starts to do post ...");
             PerfRecord postPerfRecord = new PerfRecord(getTaskGroupId(), getTaskId(), PerfRecord.PHASE.READ_TASK_POST);
             postPerfRecord.start();
@@ -89,7 +95,7 @@ public class ReaderRunner extends AbstractRunner implements Runnable {
         }
     }
 
-    public void shutdown(){
+    public void shutdown() {
         recordSender.shutdown();
     }
 }
